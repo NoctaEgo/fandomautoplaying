@@ -1,4 +1,4 @@
-// Open-source script maded by Nocta
+//script maded by Nocta
 
 (function() {
     'use strict';
