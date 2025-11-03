@@ -1,22 +1,34 @@
-//script maded by Nocta
-
+//Script maded by NoctaEgo
+//WARNING: Use of this script and any further modifications are your responsibility. 
+//Please do not contact me if the script is not loading for you because you forgot to replace links or delete comments 
+//(except for the author's note). Thank you. If you find any errors, please contact me via private message.
+//Version:0.2
 (function() {
     'use strict';
+    const config = {
+        tracks: [
+            'https://example.com/music1.mp3',
+            'https://example.com/music2.mp3',
+            'https://example.com/music3.mp3',
+        ],
+        volume: 0.5,
+        loopCurrent: false, 
+        autoPlayNext: true,
+        avoidRepeat: true, 
+        preload: 'metadata',   // 'none', 'metadata', 'auto'
+        useNativeAudioFallback: true,
+    };
 
-    const tracks = [
-        'https://example.com/music1.mp3',
-        'https://example.com/music2.mp3',
-        'https://example.com/music3.mp3',
-      //you can add more files btw
-    ];
-
-    const volume = 0.5;
-    const loopCurrent = false;
-    const autoPlayNext = true; 
     let currentAudioDiv = null;
+    let lastPlayedIndex = -1;
 
-    function getRandomTrack() {
-        return tracks[Math.floor(Math.random() * tracks.length)];
+    function getRandomTrackIndex() {
+        let randomIndex;
+        do {
+            randomIndex = Math.floor(Math.random() * config.tracks.length);
+        } while (config.avoidRepeat && randomIndex === lastPlayedIndex && config.tracks.length > 1);
+        lastPlayedIndex = randomIndex;
+        return randomIndex;
     }
 
     function createAudioDiv(src) {
@@ -27,16 +39,25 @@
         const audioDiv = document.createElement('div');
         audioDiv.className = 'html5audio';
         audioDiv.setAttribute('data-file', src);
-        audioDiv.setAttribute('data-volume', volume);
+        audioDiv.setAttribute('data-volume', config.volume);
         audioDiv.setAttribute('data-download', 'true');
-        audioDiv.setAttribute('data-preload', 'metadata');
-        audioDiv.setAttribute('data-options', loopCurrent ? 'autoplay,loop' : 'autoplay');
+        audioDiv.setAttribute('data-preload', config.preload);
+        audioDiv.setAttribute('data-options', config.loopCurrent ? 'autoplay,loop' : 'autoplay');
 
         container.appendChild(audioDiv);
         document.body.appendChild(container);
 
         audioDiv.addEventListener('ended', function() {
-            if (autoPlayNext) {
+            if (config.autoPlayNext) {
+                playRandomTrack();
+            }
+        });
+
+        audioDiv.addEventListener('error', function(e) {
+            console.warn('Ошибка воспроизведения:', e.target.src);
+            if (config.useNativeAudioFallback) {
+                fallbackToNativeAudio(src);
+            } else {
                 playRandomTrack();
             }
         });
@@ -44,18 +65,55 @@
         return container;
     }
 
+    function fallbackToNativeAudio(src) {
+        console.info('Переход на HTMLAudioElement (fallback).');
+        if (currentAudioDiv && currentAudioDiv.parentNode) {
+            currentAudioDiv.parentNode.removeChild(currentAudioDiv);
+        }
+
+        const audio = new Audio();
+        audio.src = src;
+        audio.volume = config.volume;
+        audio.preload = config.preload;
+        audio.loop = config.loopCurrent;
+
+        audio.addEventListener('ended', function() {
+            if (config.autoPlayNext) {
+                playRandomTrack();
+            }
+        });
+
+        audio.addEventListener('error', function() {
+            console.error('Ошибка в fallback audio.');
+            playRandomTrack();
+        });
+
+        audio.play().catch(e => {
+            console.error('Не удалось воспроизвести аудио (fallback):', e);
+        });
+    }
+
     function playRandomTrack() {
         if (currentAudioDiv && currentAudioDiv.parentNode) {
             currentAudioDiv.parentNode.removeChild(currentAudioDiv);
         }
 
-        const randomTrack = getRandomTrack();
+        const randomIndex = getRandomTrackIndex();
+        const randomTrack = config.tracks[randomIndex];
         currentAudioDiv = createAudioDiv(randomTrack);
     }
 
-    window.addEventListener('load', function() {
-        playRandomTrack();
-    });
-})();
+    function init() {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', playRandomTrack);
+        } else {
+            if (typeof mw !== 'undefined' && mw.config) {
+                playRandomTrack();
+            } else {
+                window.addEventListener('load', playRandomTrack);
+            }
+        }
+    }
 
-//Version 0.1 pre-alpha USE IT ON YOUR RISK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    init();
+})();
