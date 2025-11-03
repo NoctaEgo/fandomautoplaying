@@ -133,17 +133,22 @@ A: Ensure useNativeAudioFallback: true — then the script will automatically sw
 - Use adaptive volume to avoid disturbing users.
 
 # ⚠️ User Responsibility
-**The user bears full responsibility for:**
+## The user bears full responsibility for:
 
 *Any modifications to the script.*
+
 *Its functionality on your wiki.*
+
 *Adherence to Fandom rules and local wiki rules.*
+
 *Legal consequences related to the use of audio files or code.*
 
-**The script author is not responsible for:**
+## The script author is not responsible for:
 
 *Violation of wiki or Fandom rules.*
+
 *Data corruption, errors, crashes.*
+
 *Unintended behavior of the wiki or browser.*
 
 ## 📞 Support
